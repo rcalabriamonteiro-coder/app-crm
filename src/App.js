@@ -604,8 +604,6 @@ function CapturaBox({ onSave }) {
   )
 }
 
-const RED = '#C0272D'
-
 function TarefaForm({ item, onSave }) {
   const [f, setF] = useState({ titulo: '', categoria: 'CRM', prazo: '', prioridade: 'Média', ...item })
   return (
