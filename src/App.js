@@ -302,6 +302,11 @@ export default function App() {
 
   const catColor = { CRM: 'badge-blue', WhatsApp: 'badge-green', Relatório: 'badge-orange', Reunião: 'badge-gray', Outro: 'badge-gray' }
 
+  const renderPessoasTags = (tags) => {
+    if (!tags || tags.length === 0) return null
+    return tags.map(nome => <span className="badge badge-red" key={nome}>👤 {nome}</span>)
+  }
+
   const tarefasFiltradas = (cat) => {
     const sub = getSubtab('tarefas', 'Ativas')
     if (sub === 'Feitas') return data.tarefas.filter(t => t.feita && (!cat || t.categoria === cat))
@@ -319,6 +324,7 @@ export default function App() {
           {renderBadgePrazo(t.prazo)}
           <span className={`badge ${catColor[t.categoria] || 'badge-gray'}`}>{t.categoria}</span>
           {t.prioridade === 'Alta' && <span className="badge badge-red">Alta</span>}
+          {renderPessoasTags(t.pessoasTags)}
         </div>
       </div>
       <div style={{ display: 'flex', gap: 4 }}>
@@ -485,6 +491,9 @@ export default function App() {
                     {r.pendencias}
                   </div>
                 )}
+                {r.pessoasTags && r.pessoasTags.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>{renderPessoasTags(r.pessoasTags)}</div>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 2 }}>
                 <button className="delete-btn" onClick={() => openModal('reuniao', r)}><i className="ti ti-edit" style={{ fontSize: 16 }} /></button>
@@ -504,6 +513,9 @@ export default function App() {
               <div style={{ flex: 1 }}>
                 <div className="nota-titulo">{n.titulo || 'Sem título'}</div>
                 {n.conteudo && <div className="nota-preview">{n.conteudo.slice(0, 100)}{n.conteudo.length > 100 ? '...' : ''}</div>}
+                {n.pessoasTags && n.pessoasTags.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>{renderPessoasTags(n.pessoasTags)}</div>
+                )}
                 <div className="nota-meta">Editada {new Date(n.editadaEm).toLocaleString('pt-BR')}</div>
               </div>
               <button className="delete-btn" onClick={e => { e.stopPropagation(); deleteNota(n.id) }}><i className="ti ti-trash" style={{ fontSize: 16 }} /></button>
@@ -568,10 +580,10 @@ export default function App() {
               <button className="modal-close" onClick={closeModal}>×</button>
             </div>
 
-            {modal.tipo === 'tarefa' && <TarefaForm item={modal.item} onSave={saveTarefa} />}
+            {modal.tipo === 'tarefa' && <TarefaForm item={modal.item} onSave={saveTarefa} pessoas={data.pessoas} />}
             {modal.tipo === 'pessoa' && <PessoaForm item={modal.item} onSave={savePessoa} />}
-            {modal.tipo === 'reuniao' && <ReuniaoForm item={modal.item} onSave={saveReuniao} />}
-            {modal.tipo === 'nota' && <NotaForm item={modal.item} onSave={saveNota} />}
+            {modal.tipo === 'reuniao' && <ReuniaoForm item={modal.item} onSave={saveReuniao} pessoas={data.pessoas} />}
+            {modal.tipo === 'nota' && <NotaForm item={modal.item} onSave={saveNota} pessoas={data.pessoas} />}
           </div>
         </div>
       )}
@@ -604,8 +616,49 @@ function CapturaBox({ onSave }) {
   )
 }
 
-function TarefaForm({ item, onSave }) {
-  const [f, setF] = useState({ titulo: '', categoria: 'CRM', prazo: '', prioridade: 'Média', ...item })
+function PessoaTagPicker({ pessoas, selected, onChange }) {
+  const [novoNome, setNovoNome] = useState('')
+  const toggle = (nome) => {
+    if (selected.includes(nome)) onChange(selected.filter(n => n !== nome))
+    else onChange([...selected, nome])
+  }
+  const addNovo = () => {
+    const nome = novoNome.trim()
+    if (nome && !selected.includes(nome)) onChange([...selected, nome])
+    setNovoNome('')
+  }
+  return (
+    <div className="form-group">
+      <label className="form-label">Marcar pessoas</label>
+      {pessoas.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+          {pessoas.map(p => (
+            <div key={p.id} onClick={() => toggle(p.nome)} className={`subtab ${selected.includes(p.nome) ? 'active' : ''}`} style={{ marginBottom: 0 }}>
+              {p.nome}
+            </div>
+          ))}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input className="form-input" value={novoNome} onChange={e => setNovoNome(e.target.value)} placeholder="Nome de alguém fora da lista..." onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addNovo() } }} />
+        <button type="button" className="btn-secondary" style={{ width: 'auto', marginTop: 0, whiteSpace: 'nowrap' }} onClick={addNovo}>+ Adicionar</button>
+      </div>
+      {selected.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+          {selected.map(nome => (
+            <span key={nome} className="badge badge-red" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+              {nome}
+              <span style={{ cursor: 'pointer', fontWeight: 700 }} onClick={() => toggle(nome)}>×</span>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TarefaForm({ item, onSave, pessoas }) {
+  const [f, setF] = useState({ titulo: '', categoria: 'CRM', prazo: '', prioridade: 'Média', pessoasTags: [], ...item })
   return (
     <div>
       <div className="form-group"><label className="form-label">Título</label><input className="form-input" value={f.titulo} onChange={e => setF({ ...f, titulo: e.target.value })} placeholder="O que precisa ser feito?" /></div>
@@ -620,6 +673,7 @@ function TarefaForm({ item, onSave }) {
           {['Alta', 'Média', 'Baixa'].map(p => <option key={p}>{p}</option>)}
         </select>
       </div>
+      <PessoaTagPicker pessoas={pessoas} selected={f.pessoasTags || []} onChange={tags => setF({ ...f, pessoasTags: tags })} />
       <button className="btn-primary" onClick={() => onSave(f)} disabled={!f.titulo.trim()}>Salvar</button>
     </div>
   )
@@ -648,8 +702,8 @@ function PessoaForm({ item, onSave }) {
   )
 }
 
-function ReuniaoForm({ item, onSave }) {
-  const [f, setF] = useState({ titulo: '', data: '', horario: '', participantes: '', resumo: '', pendencias: '', ...item })
+function ReuniaoForm({ item, onSave, pessoas }) {
+  const [f, setF] = useState({ titulo: '', data: '', horario: '', participantes: '', resumo: '', pendencias: '', pessoasTags: [], ...item })
   return (
     <div>
       <div className="form-group"><label className="form-label">Título</label><input className="form-input" value={f.titulo} onChange={e => setF({ ...f, titulo: e.target.value })} placeholder="Assunto da reunião" /></div>
@@ -658,17 +712,19 @@ function ReuniaoForm({ item, onSave }) {
       <div className="form-group"><label className="form-label">Participantes</label><input className="form-input" value={f.participantes} onChange={e => setF({ ...f, participantes: e.target.value })} placeholder="Ex: Candidato, equipe..." /></div>
       <div className="form-group"><label className="form-label">O que foi decidido</label><textarea className="form-textarea" value={f.resumo} onChange={e => setF({ ...f, resumo: e.target.value })} placeholder="Resumo das decisões..." /></div>
       <div className="form-group"><label className="form-label">Pendências geradas</label><textarea className="form-textarea" value={f.pendencias} onChange={e => setF({ ...f, pendencias: e.target.value })} placeholder="O que ficou para fazer..." /></div>
+      <PessoaTagPicker pessoas={pessoas} selected={f.pessoasTags || []} onChange={tags => setF({ ...f, pessoasTags: tags })} />
       <button className="btn-primary" onClick={() => onSave(f)} disabled={!f.titulo.trim()}>Salvar</button>
     </div>
   )
 }
 
-function NotaForm({ item, onSave }) {
-  const [f, setF] = useState({ titulo: '', conteudo: '', ...item })
+function NotaForm({ item, onSave, pessoas }) {
+  const [f, setF] = useState({ titulo: '', conteudo: '', pessoasTags: [], ...item })
   return (
     <div>
       <div className="form-group"><label className="form-label">Título</label><input className="form-input" value={f.titulo} onChange={e => setF({ ...f, titulo: e.target.value })} placeholder="Título da nota" /></div>
       <div className="form-group"><label className="form-label">Conteúdo</label><textarea className="form-textarea" style={{ minHeight: 160 }} value={f.conteudo} onChange={e => setF({ ...f, conteudo: e.target.value })} placeholder="Escreva aqui..." /></div>
+      <PessoaTagPicker pessoas={pessoas} selected={f.pessoasTags || []} onChange={tags => setF({ ...f, pessoasTags: tags })} />
       <button className="btn-primary" onClick={() => onSave(f)} disabled={!f.titulo.trim()}>Salvar</button>
     </div>
   )
