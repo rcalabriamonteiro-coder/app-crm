@@ -90,7 +90,10 @@ body { background: #F5F5F4; color: #111; font-size: 15px; }
 .captura-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid rgba(0,0,0,0.1); }
 .captura-btn { font-size: 12px; padding: 6px 12px; border-radius: 8px; border: 0.5px solid rgba(0,0,0,0.12); background: #F5F5F4; color: #555; cursor: pointer; }
 .login-container { min-height: 100vh; background: ${BLACK}; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
-.login-logo { color: ${RED}; font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
+.login-mono { font-size: 34px; font-weight: 800; letter-spacing: 1px; margin-bottom: 10px; }
+.login-mono .r { color: ${RED}; }
+.login-mono .c { color: white; }
+.login-nome { color: white; font-size: 15px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
 .login-sub { color: #666; font-size: 13px; margin-bottom: 36px; }
 .login-card { background: #1a1a1a; border-radius: 16px; padding: 24px; width: 100%; max-width: 360px; border: 0.5px solid rgba(255,255,255,0.08); }
 .login-input { width: 100%; background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 8px; color: white; font-size: 14px; padding: 12px 14px; outline: none; margin-bottom: 12px; }
@@ -100,8 +103,11 @@ body { background: #F5F5F4; color: #111; font-size: 15px; }
 .login-toggle { color: #777; font-size: 13px; margin-top: 16px; text-align: center; cursor: pointer; }
 .login-toggle span { color: ${RED}; }
 .top-bar { background: ${BLACK}; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
-.top-bar-title { color: white; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
-.top-bar-title span { color: ${RED}; }
+.top-bar-title { color: white; font-size: 15px; font-weight: 700; letter-spacing: -0.2px; display: flex; align-items: center; gap: 8px; }
+.top-bar-mono { font-weight: 800; letter-spacing: 0.5px; }
+.top-bar-mono .r { color: ${RED}; }
+.top-bar-mono .c { color: white; }
+.top-bar-divider { color: #444; font-weight: 400; }
 .logout-btn { background: transparent; border: 0.5px solid #444; border-radius: 8px; color: #888; font-size: 12px; padding: 5px 10px; cursor: pointer; }
 .delete-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; padding: 4px; flex-shrink: 0; }
 .delete-btn:hover { color: ${RED}; }
@@ -193,7 +199,8 @@ export default function App() {
   if (!user) return (
     <div className="login-container">
       <style>{styles}</style>
-      <div className="login-logo">APP<span style={{ color: 'white' }}>CRM</span></div>
+      <div className="login-mono"><span className="r">R</span><span className="c">C</span></div>
+      <div className="login-nome">Organizador</div>
       <div className="login-sub">Organização pessoal do coordenador</div>
       <div className="login-card">
         <form onSubmit={handleAuth}>
@@ -343,7 +350,11 @@ export default function App() {
       <style>{styles}</style>
 
       <div className="top-bar">
-        <div className="top-bar-title">APP<span>CRM</span></div>
+        <div className="top-bar-title">
+          <span className="top-bar-mono"><span className="r">R</span><span className="c">C</span></span>
+          <span className="top-bar-divider">·</span>
+          Organizador
+        </div>
         <button className="logout-btn" onClick={logout}>Sair</button>
       </div>
 
